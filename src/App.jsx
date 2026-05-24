@@ -192,44 +192,53 @@ export default function FlashyTodoApp() {
   const inputBg = "bg-white/8 border-white/10 placeholder:text-white/35";
   const theme = "dark";
 
-  return (
-    <div className={`min-h-screen overflow-hidden cursor-none ${themeClasses}`}>
-      <div
-        ref={cursorGlowRef}
-        className="pointer-events-none fixed left-0 top-0 z-[120] h-[28rem] w-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-70 mix-blend-screen"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(139,92,246,0.34) 0%, rgba(34,211,238,0.18) 38%, rgba(255,255,255,0.02) 72%, transparent 100%)",
-          filter: "blur(58px)",
-          willChange: "transform",
-        }}
-      />
+return (
+  <div className={`min-h-screen overflow-hidden cursor-none ${themeClasses}`}>
+    
+    <div
+      ref={cursorGlowRef}
+      className="pointer-events-none fixed left-0 top-0 -z-10 h-[28rem] w-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-70 mix-blend-screen"
+      style={{
+        background:
+          "radial-gradient(circle, rgba(139,92,246,0.34) 0%, rgba(34,211,238,0.18) 38%, rgba(255,255,255,0.02) 72%, transparent 100%)",
+        filter: "blur(58px)",
+        willChange: "transform",
+      }}
+    />
 
-      <div
-        ref={cursorRingRef}
-        className="pointer-events-none fixed left-0 top-0 z-[121] h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal-300/60 mix-blend-screen"
-        style={{
-          boxShadow: "0 0 45px rgba(45, 212, 191, 0.45)",
-          filter: "blur(2px)",
-          willChange: "transform",
-        }}
-      />
+    <div
+      ref={cursorRingRef}
+      className="pointer-events-none fixed left-0 top-0 -z-10 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal-300/60 mix-blend-screen"
+      style={{
+        boxShadow: "0 0 45px rgba(45, 212, 191, 0.45)",
+        filter: "blur(2px)",
+        willChange: "transform",
+      }}
+    />
 
-      <div
-        ref={cursorDotRef}
-        className="pointer-events-none fixed left-0 top-0 z-[122] h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white mix-blend-screen"
-        style={{
-          boxShadow: "0 0 20px rgba(255,255,255,0.95), 0 0 40px rgba(34,211,238,0.55)",
-          willChange: "transform",
-        }}
-      />
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.15)_1px,transparent_1px)] [background-size:80px_80px]" />
-        <div className="absolute left-1/2 top-0 h-[38rem] w-[38rem] -translate-x-1/2 rounded-full bg-violet-500/10 blur-[120px]" />
-        <div className="absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-fuchsia-500/20 blur-3xl" />
-        <div className="absolute right-[-4rem] top-32 h-80 w-80 rounded-full bg-cyan-400/20 blur-3xl" />
-        <div className="absolute bottom-[-5rem] left-10 h-72 w-72 rounded-full bg-violet-400/20 blur-3xl" />
-      </div>
+    <div
+      ref={cursorDotRef}
+      className="pointer-events-none fixed left-0 top-0 -z-10 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white mix-blend-screen"
+      style={{
+        boxShadow:
+          "0 0 20px rgba(255,255,255,0.95), 0 0 40px rgba(34,211,238,0.55)",
+        willChange: "transform",
+      }}
+    />
+
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      
+      <div className="absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.15)_1px,transparent_1px)] [background-size:80px_80px]" />
+
+      <div className="absolute left-1/2 top-0 h-[38rem] w-[38rem] -translate-x-1/2 rounded-full bg-violet-500/10 blur-[120px]" />
+
+      <div className="absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-fuchsia-500/20 blur-3xl" />
+
+      <div className="absolute right-[-4rem] top-32 h-80 w-80 rounded-full bg-cyan-400/20 blur-3xl" />
+
+      <div className="absolute bottom-[-5rem] left-10 h-72 w-72 rounded-full bg-violet-400/20 blur-3xl" />
+
+    </div>
 
       <main className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid w-full gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
