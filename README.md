@@ -144,7 +144,6 @@ vercel
 
 ## 🎨 Future Improvements
 
-- 🌌 Add pink and biege themes
 - ☁️ Cloud sync
 - 🔔 Notifications
 - 📊 Analytics dashboard
