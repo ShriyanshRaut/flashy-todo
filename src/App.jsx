@@ -268,8 +268,13 @@ export default function App() {
 
   useEffect(() => {
     if (!audioRef.current) return;
-    if (audioOn) { audioRef.current.volume = 0.18; audioRef.current.play().catch(() => {}); }
-    else audioRef.current.pause();
+    if (audioOn) { 
+      audioRef.current.volume = 0.25; 
+      audioRef.current.play().catch(() => {}); 
+    }
+    else {
+      audioRef.current.pause();
+    }
   }, [audioOn]);
 
   const changeTheme = (next) => {
@@ -334,7 +339,12 @@ export default function App() {
         }
       `}</style>
 
-      <audio ref={audioRef} src="https://cdn.pixabay.com/audio/2022/03/15/audio_1b4ab9e5c6.mp3" loop />
+      {/* Changed source to a relaxing Lo-Fi background track */}
+      <audio 
+        ref={audioRef} 
+        src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3" 
+        loop 
+      />
 
       <div ref={bgRef} className="pointer-events-none fixed inset-0 z-0 transition-all duration-75" />
 
