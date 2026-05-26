@@ -59,6 +59,7 @@ const themes = {
     activeCalendar: "border-cyan-400/40 bg-gradient-to-br from-cyan-500/30 via-violet-500/30 to-fuchsia-500/30 shadow-[0_0_20px_rgba(34,211,238,0.25)]",
     progress: "from-cyan-400 to-fuchsia-500", progressStart: "#22d3ee", progressEnd: "#d946ef",
     cardHoverGlow: "rgba(139,92,246,0.25)", accentText: "text-white",
+    solidBg: "#030712", solidText: "#ffffff", solidBorder: "rgba(255,255,255,0.1)"
   },
   pink: {
     bg: "#14040f", gradBlob1: "rgba(255,0,128,0.18)", gradBlob2: "rgba(236,72,153,0.12)",
@@ -74,6 +75,7 @@ const themes = {
     activeCalendar: "border-pink-400/40 bg-gradient-to-br from-pink-500/30 via-fuchsia-500/30 to-rose-500/30 shadow-[0_0_20px_rgba(236,72,153,0.25)]",
     progress: "from-pink-400 to-rose-500", progressStart: "#f472b6", progressEnd: "#f43f5e",
     cardHoverGlow: "rgba(236,72,153,0.25)", accentText: "text-white",
+    solidBg: "#14040f", solidText: "#fdf2f8", solidBorder: "rgba(236,72,153,0.1)"
   },
   beige: {
     bg: "#1a1208", gradBlob1: "rgba(180,130,60,0.22)", gradBlob2: "rgba(140,95,30,0.15)",
@@ -89,6 +91,7 @@ const themes = {
     activeCalendar: "border-[#b8852a] bg-gradient-to-br from-[#d4aa55] via-[#c49535] to-[#a87820] shadow-[0_0_20px_rgba(180,130,40,0.35)]",
     progress: "from-[#c49a3c] to-[#9e6e1a]", progressStart: "#c49a3c", progressEnd: "#9e6e1a",
     cardHoverGlow: "rgba(196,154,60,0.25)", accentText: "text-[#1a1208]",
+    solidBg: "#241a0a", solidText: "#f0e6d0", solidBorder: "rgba(138,106,48,0.4)"
   },
 };
 
@@ -96,6 +99,11 @@ const PARTICLES = Array.from({ length: 38 }, () => ({
   left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, size: `${Math.random() * 3 + 1}px`,
   duration: `${Math.random() * 15 + 10}s`, delay: `-${Math.random() * 10}s`,
   opacity: Math.random() * 0.6 + 0.15, glow: Math.random() * 6 + 3,
+  tx1: `${Math.random() > 0.5 ? "" : "-"}${Math.floor(Math.random() * 40 + 10)}px`,
+  ty1: `-${Math.floor(Math.random() * 60 + 20)}px`,
+  tx2: `${Math.random() > 0.5 ? "" : "-"}${Math.floor(Math.random() * 30 + 5)}px`,
+  ty2: `-${Math.floor(Math.random() * 80 + 30)}px`,
+  ty3: `-${Math.floor(Math.random() * 100 + 40)}px`,
 }));
 
 function Particle({ data, color }) {
@@ -171,13 +179,11 @@ export default function App() {
     catch { return defaultSettings; }
   });
   
-  // Input State
   const [input, setInput] = useState("");
   const [priority, setPriority] = useState("medium");
   const [tagInput, setTagInput] = useState("");
   const [dueTime, setDueTime] = useState("");
   
-  // Dashboard & Filtering State
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [activeTag, setActiveTag] = useState("all");
@@ -185,7 +191,6 @@ export default function App() {
   const [selectedDate, setSelectedDate] = useState(todayString);
   const [calendarOffset, setCalendarOffset] = useState(0);
   
-  // UI & Audio State
   const [audioOn, setAudioOn] = useState(false);
   const [trackIndex, setTrackIndex] = useState(0);
   const [isChangingTheme, setIsChangingTheme] = useState(false);
@@ -194,7 +199,6 @@ export default function App() {
 
   const t = themes[theme];
 
-  // Cursor Physics Refs
   const cursorGlowRef = useRef(null);
   const cursorRingRef = useRef(null);
   const cursorDotRef  = useRef(null);
@@ -260,7 +264,7 @@ export default function App() {
     } else {
       audioRef.current.pause();
     }
-  }, [audioOn, trackIndex]);
+  }, [audioOn, trackIndex, settings.volume]);
 
   const changeTheme = (next) => {
     if (next === theme) return;
@@ -275,7 +279,6 @@ export default function App() {
       setSettings(prev => ({ ...prev, [key]: value }));
   };
 
-  // Advanced Filtering 
   const filteredTasks = useMemo(() => tasks.filter(task => {
     const matchDate   = task.date === selectedDate;
     const matchQuery  = task.text.toLowerCase().includes(query.toLowerCase()) || (task.tags && task.tags.some(tg => tg.toLowerCase().includes(query.toLowerCase())));
@@ -284,16 +287,13 @@ export default function App() {
     return matchDate && matchQuery && matchFilter && matchTag;
   }), [tasks, query, filter, selectedDate, activeTag]);
 
-  // Streak Calculation (Forgiving Mode Supported)
   const currentStreak = useMemo(() => {
     let streakCount = 0;
     let checkDate = new Date();
     const todayIso = getLocalIsoDate(checkDate);
     
-    // Check if there are completed tasks today
     const todayHasCompleted = tasks.some(t => t.date === todayIso && t.completed);
 
-    // If forgiving streak is on, and we haven't done anything today, we don't punish them yet. Start checking from yesterday.
     if (settings.forgivingStreak && !todayHasCompleted) {
         checkDate.setDate(checkDate.getDate() - 1);
     }
@@ -303,22 +303,20 @@ export default function App() {
       const hasCompletedTasks = tasks.some(t => t.date === iso && t.completed);
       if (hasCompletedTasks) {
         streakCount++;
-        checkDate.setDate(checkDate.getDate() - 1); // Step back a day
+        checkDate.setDate(checkDate.getDate() - 1);
       } else {
-        break; // Chain broken
+        break;
       }
     }
     return streakCount;
   }, [tasks, settings.forgivingStreak]);
 
-  // Unique Tags for Filtering
   const uniqueTags = useMemo(() => {
     const tags = new Set();
     tasks.filter(t => t.date === selectedDate).forEach(t => t.tags?.forEach(tg => tags.add(tg)));
     return Array.from(tags);
   }, [tasks, selectedDate]);
 
-  // Analytics Progress
   const completedToday = filteredTasks.filter(tk => tk.completed).length;
   const progress = filteredTasks.length ? Math.round((completedToday / filteredTasks.length) * 100) : 0;
   const goalProgressPercent = Math.min(100, (completedToday / settings.dailyGoal) * 100);
@@ -327,7 +325,6 @@ export default function App() {
     const text = input.trim();
     if (!text) return;
     
-    // Parse tag input (comma separated)
     const parsedTags = tagInput ? tagInput.split(',').map(t => t.trim()).filter(Boolean) : [];
 
     setTasks(prev => [{ 
@@ -369,35 +366,50 @@ export default function App() {
           66%  { transform: translate(-10px, -65px) scale(0.9); }
           100% { transform: translate(5px, -110px) scale(1.1); opacity: 0; }
         }
-        /* Custom Scrollbar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Range Slider */
-        input[type=range] { -webkit-appearance: none; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #ffffff; cursor: pointer; margin-top: -6px; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: rgba(255,255,255,0.1); border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: #ffffff; cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
       `}</style>
 
-      <audio ref={audioRef} src={AUDIO_TRACKS[trackIndex].url} loop />
+      <audio 
+        ref={audioRef} 
+        src={AUDIO_TRACKS[trackIndex].url} 
+        loop 
+      />
 
       <div ref={bgRef} className="pointer-events-none fixed inset-0 z-0 transition-all duration-75" />
+
       <div className="pointer-events-none fixed inset-0 z-[1] overflow-hidden">
         {PARTICLES.map((p, i) => <Particle key={i} data={p} color={t.particleColor} />)}
       </div>
 
-      {/* Cursors */}
-      <div ref={cursorGlowRef} className="pointer-events-none fixed left-0 top-0 z-[99999] h-[16rem] w-[16rem] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40" style={{ background: `radial-gradient(circle, ${t.glowColor} 0%, ${t.glowColor2} 38%, transparent 72%)`, mixBlendMode: "screen", filter: "blur(58px)", willChange: "transform" }} />
-      <div ref={cursorRingRef} className="pointer-events-none fixed left-0 top-0 z-[99999] h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ border: `1px solid ${t.ringColor}`, boxShadow: t.ringBoxShadow, mixBlendMode: "screen", filter: "blur(1px)", willChange: "transform" }} />
-      <div ref={cursorDotRef} className="pointer-events-none fixed left-0 top-0 z-[99999] h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" style={{ mixBlendMode: "screen", boxShadow: t.dotShadow, willChange: "transform" }} />
+      <div ref={cursorGlowRef}
+        className="pointer-events-none fixed left-0 top-0 z-[99999] h-[16rem] w-[16rem] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40"
+        style={{
+          background: `radial-gradient(circle, ${t.glowColor} 0%, ${t.glowColor2} 38%, transparent 72%)`,
+          mixBlendMode: "screen", filter: "blur(58px)", willChange: "transform",
+        }} />
+
+      <div ref={cursorRingRef}
+        className="pointer-events-none fixed left-0 top-0 z-[99999] h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full"
+        style={{
+          border: `1px solid ${t.ringColor}`,
+          boxShadow: t.ringBoxShadow,
+          mixBlendMode: "screen", filter: "blur(1px)", willChange: "transform",
+        }} />
+
+      <div ref={cursorDotRef}
+        className="pointer-events-none fixed left-0 top-0 z-[99999] h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+        style={{ mixBlendMode: "screen", boxShadow: t.dotShadow, willChange: "transform" }} />
 
       <div className="flex w-full max-w-[1240px] items-stretch gap-8 px-4 py-8">
         
-        {/* LEFT COLUMN - Mission Input & Analytics */}
         <div className="flex-1 flex flex-col gap-5">
           <GlowCard glowColor={t.cardHoverGlow} className={`glass-card flex-1 rounded-[1.4rem] border p-5 ${t.card}`}>
             
-            {/* Header & Theme Controls */}
             <div className="mb-6 flex items-start justify-between">
               <div>
                 <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs">
@@ -412,13 +424,23 @@ export default function App() {
                 <MagneticButton onClick={() => setAudioOn(a => !a)} className={`rounded-full p-2 transition-all duration-300 ${t.button}`}>
                   {audioOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                 </MagneticButton>
+
                 <AnimatePresence>
                   {audioOn && (
-                    <motion.div initial={{ width: 0, opacity: 0, scale: 0.8 }} animate={{ width: "auto", opacity: 1, scale: 1 }} exit={{ width: 0, opacity: 0, scale: 0.8 }} className="flex items-center gap-2 origin-left overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0, opacity: 0, scale: 0.8 }}
+                      animate={{ width: "auto", opacity: 1, scale: 1 }}
+                      exit={{ width: 0, opacity: 0, scale: 0.8 }}
+                      className="flex items-center gap-2 origin-left overflow-hidden"
+                    >
                       <div className={`flex items-center justify-center rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${t.button} hover:bg-transparent cursor-default whitespace-nowrap`}>
                         {AUDIO_TRACKS[trackIndex].name}
                       </div>
-                      <MagneticButton onClick={() => setTrackIndex(i => (i + 1) % AUDIO_TRACKS.length)} className={`rounded-full p-2 transition-all duration-300 ${t.button}`} title="Next Track">
+                      <MagneticButton 
+                        onClick={() => setTrackIndex(i => (i + 1) % AUDIO_TRACKS.length)} 
+                        className={`rounded-full p-2 transition-all duration-300 ${t.button}`}
+                        title="Next Track"
+                      >
                         <SkipForward className="h-4 w-4" />
                       </MagneticButton>
                     </motion.div>
@@ -428,14 +450,14 @@ export default function App() {
                 <div className="w-[1px] h-6 bg-current opacity-20 mx-1"></div>
 
                 {["dark","pink","beige"].map(th => (
-                  <MagneticButton key={th} onClick={() => changeTheme(th)} className={`rounded-full px-4 py-2 text-sm transition-all duration-300 ${theme === th ? `bg-gradient-to-r ${t.accent} ${t.accentText} shadow-lg` : t.button}`}>
+                  <MagneticButton key={th} onClick={() => changeTheme(th)}
+                    className={`rounded-full px-4 py-2 text-sm transition-all duration-300 ${theme === th ? `bg-gradient-to-r ${t.accent} ${t.accentText} shadow-lg` : t.button}`}>
                     {th.charAt(0).toUpperCase() + th.slice(1)}
                   </MagneticButton>
                 ))}
 
                 <div className="w-[1px] h-6 bg-current opacity-20 mx-1"></div>
                 
-                {/* Settings Toggle */}
                 <MagneticButton onClick={() => setIsSettingsOpen(true)} className={`rounded-full p-2 transition-all duration-300 ${t.button}`}>
                   <Settings className="h-4 w-4" />
                 </MagneticButton>
@@ -443,7 +465,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Calendar Strip */}
             <div className={`rounded-[1.4rem] border p-4 ${t.card}`}>
               <div className="mb-5 flex items-center justify-between z-50">
                 <div>
@@ -461,7 +482,8 @@ export default function App() {
                   const isActive = iso === selectedDate;
                   const dayTasks = tasks.filter(tk => tk.date === iso).length;
                   return (
-                    <MagneticButton key={iso} onClick={() => setSelectedDate(iso)} strength={0.2} className={`rounded-[1rem] border p-3 transition-all duration-300 ${isActive ? t.activeCalendar : t.button}`}>
+                    <MagneticButton key={iso} onClick={() => setSelectedDate(iso)} strength={0.2}
+                      className={`rounded-[1rem] border p-3 transition-all duration-300 ${isActive ? t.activeCalendar : t.button}`}>
                       <div className="text-[10px] uppercase tracking-[0.2em] opacity-60">{day.toLocaleDateString("en-US", { weekday: "short" })}</div>
                       <div className="mt-2 text-3xl font-black">{day.getDate()}</div>
                       <div className="mt-2 flex items-center justify-center gap-1 text-xs">
@@ -473,10 +495,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Analytics Dashboard Grid */}
             <div className="mt-5 grid grid-cols-3 gap-4 items-stretch">
               
-              {/* Daily Goal */}
               <GlowCard glowColor={t.cardHoverGlow} className={`glass-card rounded-[1.2rem] border p-4 flex flex-col justify-center ${t.card}`}>
                 <div className={`text-[10px] uppercase font-bold tracking-widest flex items-center gap-2 mb-3 ${t.subtle}`}><Target className="w-3.5 h-3.5"/> Daily Target</div>
                 <div className="text-4xl font-black">{completedToday} <span className="text-xl font-medium opacity-40">/ {settings.dailyGoal}</span></div>
@@ -485,7 +505,6 @@ export default function App() {
                 </div>
               </GlowCard>
 
-              {/* Streak */}
               <GlowCard glowColor={t.cardHoverGlow} className={`glass-card rounded-[1.2rem] border p-4 flex flex-col justify-center ${t.card}`}>
                  <div className={`text-[10px] uppercase font-bold tracking-widest flex items-center gap-2 mb-3 ${t.subtle}`}><Flame className="w-3.5 h-3.5 text-orange-400"/> Current Streak</div>
                  <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
@@ -493,7 +512,6 @@ export default function App() {
                  </div>
               </GlowCard>
 
-              {/* Progress Ring */}
               <div className={`glass-card rounded-[1.2rem] border p-2 flex items-center justify-center ${t.card}`}>
                 <ProgressRing progress={progress} theme={theme} />
               </div>
@@ -501,21 +519,29 @@ export default function App() {
             </div>
           </GlowCard>
 
-          {/* Productivity Input Card */}
           <GlowCard glowColor={t.cardHoverGlow} className={`glass-card rounded-[1.4rem] border p-5 ${t.card} z-50`}>
             
-            {/* Primary Input */}
             <div className="flex gap-3">
               <div className="relative flex-1">
                 <Plus className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60" />
-                <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && addTask()} placeholder="Add a new mission..." className={`w-full rounded-xl border py-3 pl-11 pr-4 text-sm outline-none transition-all duration-300 ${t.input} cursor-none`} />
+                <input value={input} onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && addTask()}
+                  placeholder="Add a new task"
+                  className={`w-full rounded-xl border py-3 pl-11 pr-4 text-sm outline-none transition-all duration-300 ${t.input} cursor-none`} />
               </div>
-              <MagneticButton onClick={addTask} className={`rounded-xl bg-gradient-to-r px-6 py-3 text-sm font-bold transition-all duration-300 ${t.accent} ${t.accentText}`}>Add task</MagneticButton>
+              <MagneticButton onClick={addTask}
+                className={`rounded-xl bg-gradient-to-r px-6 py-3 text-sm font-bold transition-all duration-300 ${t.accent} ${t.accentText}`}>
+                Add task
+              </MagneticButton>
             </div>
 
-            {/* Task Properties (Priority, Tags, Time) */}
             <div className="flex gap-2 mt-3 overflow-x-auto pb-1 no-scrollbar items-center">
-              <select value={priority} onChange={e => setPriority(e.target.value)} className={`rounded-lg px-3 py-2 text-xs font-semibold outline-none appearance-none cursor-none ${t.input}`}>
+              <select 
+                value={priority} 
+                onChange={e => setPriority(e.target.value)} 
+                style={{ backgroundColor: t.solidBg, color: t.solidText, borderColor: t.solidBorder, borderWidth: "1px" }}
+                className="rounded-lg px-3 py-2 text-xs font-semibold outline-none appearance-none cursor-none"
+              >
                 <option value="low">⬜ Low Priority</option>
                 <option value="medium">🟦 Medium Priority</option>
                 <option value="high">🟧 High Priority</option>
@@ -533,7 +559,6 @@ export default function App() {
 
             <div className="w-full h-px bg-white/10 my-4"></div>
 
-            {/* Filtering */}
             <div className="flex flex-wrap gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60" />
@@ -551,7 +576,6 @@ export default function App() {
           </GlowCard>
         </div>
 
-        {/* RIGHT COLUMN - Mission Control List */}
         <GlowCard glowColor={t.cardHoverGlow} className={`glass-card w-[440px] self-stretch rounded-[1.4rem] border p-6 flex flex-col ${t.card} z-40`}>
           <div className="mb-5">
             <div className="flex items-center justify-between mb-4">
@@ -569,7 +593,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Tag Filter Strip */}
             {uniqueTags.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                 <button onClick={() => setActiveTag('all')} className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${activeTag === 'all' ? `bg-white text-black border-white` : t.button}`}>All</button>
@@ -608,7 +631,6 @@ export default function App() {
                         {task.text}
                       </h3>
                       
-                      {/* Priority, Tags & Time Badges */}
                       <div className="flex flex-wrap gap-2 mt-2">
                         {task.priority && (
                            <span className={`flex items-center gap-1 px-2 py-0.5 rounded border text-[9px] font-bold uppercase tracking-wider ${
@@ -644,7 +666,6 @@ export default function App() {
         </GlowCard>
       </div>
 
-      {/* Settings Modal Overlay */}
       <AnimatePresence>
         {isSettingsOpen && (
           <motion.div
@@ -664,7 +685,6 @@ export default function App() {
               </h2>
 
               <div className="space-y-6">
-                {/* Operator Name */}
                 <div>
                   <label className={`text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2 ${t.subtle}`}><User className="w-4 h-4"/> Operator Designation</label>
                   <input 
@@ -675,7 +695,6 @@ export default function App() {
                   />
                 </div>
 
-                {/* Daily Goal */}
                 <div>
                   <label className={`text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2 ${t.subtle}`}><Target className="w-4 h-4"/> Daily Mission Quota</label>
                   <div className="flex items-center gap-4">
@@ -685,7 +704,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Audio Volume */}
                 <div>
                   <label className={`text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2 ${t.subtle}`}><Sliders className="w-4 h-4"/> Ambient Volume</label>
                   <input 
@@ -696,11 +714,10 @@ export default function App() {
                   />
                 </div>
 
-                {/* Forgiving Streaks Toggle */}
                 <div className={`p-4 rounded-xl border flex items-center justify-between mt-4 ${t.input}`}>
                   <div>
                     <div className="font-bold flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-emerald-400"/> Forgiving Streaks</div>
-                    <div className={`text-xs mt-1 max-w-[240px] ${t.subtle}`}>Don't break the streak if today isn't over yet (checks yesterday first).</div>
+                    <div className={`text-xs mt-1 max-w-[240px] ${t.subtle}`}>Don't break the streak if today isn't over yet</div>
                   </div>
                   <button 
                     onClick={() => updateSetting('forgivingStreak', !settings.forgivingStreak)}
