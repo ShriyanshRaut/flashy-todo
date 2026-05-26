@@ -193,10 +193,23 @@ function PrioritySelect({ value, onChange, t }) {
 
   useEffect(() => {
     const handler = (e) => {
-      if (btnRef.current && !btnRef.current.contains(e.target)) setOpen(false);
+      const dropdown = document.getElementById("priority-dropdown");
+
+      if (
+        btnRef.current &&
+        !btnRef.current.contains(e.target) &&
+        dropdown &&
+        !dropdown.contains(e.target)
+      ) {
+        setOpen(false);
+      }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+
+    document.addEventListener("click", handler);
+
+    return () => {
+      document.removeEventListener("click", handler);
+    };
   }, []);
 
   return (
@@ -218,6 +231,7 @@ function PrioritySelect({ value, onChange, t }) {
           style={{ top: coords.top, left: coords.left }}
         >
           <motion.div
+            id="priority-dropdown"
             initial={{ opacity: 0, y: -6, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
@@ -422,7 +436,7 @@ export default function App() {
 
       <div className="flex w-full max-w-[1240px] items-stretch gap-8 px-4 py-8">
 
-        {/* ── LEFT COLUMN ── */}
+
         <div className="flex-1 flex flex-col gap-5">
           <GlowCard glowColor={t.cardHoverGlow} className={`glass-card flex-1 rounded-[1.4rem] border p-5 ${t.card}`}>
 
@@ -508,7 +522,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Stats */}
+            
             <div className="mt-5 grid grid-cols-3 gap-4 items-stretch">
               <GlowCard glowColor={t.cardHoverGlow} className={`glass-card rounded-[1.2rem] border p-4 flex flex-col justify-center ${t.card}`}>
                 <div className={`text-[10px] uppercase font-bold tracking-widest flex items-center gap-2 mb-3 ${t.subtle}`}><Target className="w-3.5 h-3.5"/> Daily Target</div>
@@ -547,7 +561,6 @@ export default function App() {
             </div>
 
             <div className="flex gap-2 mt-3 overflow-x-auto pb-1 no-scrollbar items-center">
-              {/* ── Custom priority dropdown replacing native <select> ── */}
               <PrioritySelect value={priority} onChange={setPriority} t={t} />
 
               <div className="relative">
